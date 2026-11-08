@@ -75,6 +75,7 @@ It runs a test pattern, asks what you see, and sets `reverse` for each tube to m
 - [Quick start](#quick-start)
 - [CLI reference](#cli-reference)
 - [Using the MCP server](#using-the-mcp-server)
+- [Using with a camera and motion control](#using-with-a-camera-and-motion-control)
 - [Configuration](#configuration)
 - [Effects](#effects)
 - [Python library](#python-library)
@@ -407,6 +408,51 @@ whole tube).
 | `couldn't open the DMX adapter` | A CLI command, another server instance or other DMX software has it. Stop that, or call `stop_effect` |
 | New tools don't appear after updating | Restart the client (Claude Desktop: fully quit) so it restarts the server |
 
+## Using with a camera and motion control
+
+The lights are one part of a studio. With a camera MCP server (for example, one for a Nikon) and
+[edelkrone's MCP server](https://connect.edelkrone.com) for sliders and heads, one assistant can
+light, move and shoot in a single request. Each device keeps its own server: register all three
+with the same client, and the assistant coordinates them.
+
+```json
+{
+  "mcpServers": {
+    "gvm-lights": { "command": "C:\\path\\to\\python.exe", "args": ["-m", "gvm", "--config", "C:\\git\\gvm\\gvm.toml", "mcp"] },
+    "camera":     { "...": "your camera MCP server" },
+    "edelkrone":  { "...": "edelkrone's MCP server" }
+  }
+}
+```
+
+### How the lights fit in
+
+- **Set the look, then shoot.** Static looks (`set_white`, `set_color`, `paint`) stay on the tubes
+  with nothing left running, so they don't change during an exposure.
+- **Effects run while other things happen.** `start_effect` returns straight away, so the camera
+  can start recording and the slider can move while the tubes animate. End with `stop_effect`.
+- **Frame-by-frame work** (turnarounds, time-lapse, stop-motion): change the light → move → wait
+  for the motion to settle → capture, repeated. Use static looks between frames, not effects.
+- **Match white balance.** When using white light, set the camera's white balance to the tubes'
+  colour temperature.
+- **Motion is real hardware.** edelkrone's server asks the assistant to read its SDK info and
+  safety rules first. Confirm move ranges before the first run.
+
+### Example requests
+
+Rename capabilities to match what your camera server exposes.
+
+| Request | What happens |
+|---|---|
+| "Product setup: tubes 5600 K at 70%, camera 5600 K white balance, f/8, ISO 100, slider to center, then a test shot." | Light → camera settings → move → capture |
+| "12-frame turnaround: rotate the head 30° per frame, wait for it to settle, shoot. Keep the tubes at 4300 K, 60%." | Static look held for every frame |
+| "Same position, three shots at 3200 K, 4300 K and 5600 K, matching white balance each time, then one with tube 1 red and tube 2 blue." | Light and camera changed together per frame |
+| "10-second push-in: start recording, run the slider end to end, and fade the tubes from 10% to 80% warm white over the same time." | Lighting fade in step with the move |
+| "Record 30 seconds of table ping pong on the tubes while the head pans back and forth." | Background effect during motion and recording |
+| "Time-lapse: 120 frames, slider one step per frame, shifting the tubes from 3200 K toward 6500 K across the sequence." | A new static look before each frame |
+| "Interview: tube 1 key at 4300 K 80%, tube 2 fill at 35%, camera 4300 K at 1/50 s, f/2.8, head 15° off-axis, test frame." | A full setup in one request |
+| "Set both tubes to 5600 K at 50%, shoot them, and adjust tube 2 until they match." | Uses camera feedback, if the camera server returns images or exposure data |
+
 ## Configuration
 
 `gvm.toml` (this repo's copy is set up for two tubes):
@@ -501,6 +547,7 @@ The tests don't need hardware. CI runs them on every push (see `.github/workflow
 | `src/gvm/animations.py` | Software pixel and rig effects |
 | `src/gvm/colors.py` | Colour parsing and gradients |
 | `src/gvm/setup_guide.py` | Light settings / wiring checklist for `gvm setup` and `light_setup_guide` |
+| `CLAUDE.md` | Guidance for AI agents working in this repo |
 | `src/gvm/cli.py` | The `gvm` command |
 | `src/gvm/mcp_server.py` | The MCP server |
 | `docs/SETUP.md` | Setup guide: wiring, pinouts, tube settings, install, MCP, troubleshooting |
