@@ -17,6 +17,9 @@ lights: "make the tubes warm white at 40%", "run a slow cyan meteor", "paint a s
 > **New here? Read the [setup guide](docs/SETUP.md) first.** It covers the wiring, the XLR-to-RJ45
 > pinout (the most common reason nothing works), the settings on each tube, install, first tests,
 > connecting Claude, and troubleshooting.
+>
+> GVM's own documents: the **[BD45R DMX channel table (PDF)][gvm-dmx]** and the
+> **[BD25R / BD45R user manual (PDF)][gvm-manual]**. More under [Reference documents](#reference-documents).
 
 ## Contents
 
@@ -29,6 +32,7 @@ lights: "make the tubes warm white at 40%", "run a slow cyan meteor", "paint a s
 - [Python library](#python-library)
 - [Development](#development)
 - [Project layout](#project-layout)
+- [Reference documents](#reference-documents)
 
 ## How it fits together
 
@@ -287,6 +291,20 @@ The tests don't need hardware. CI runs them on every push (see `.github/workflow
 | `docs/SETUP.md` | Setup guide: wiring, pinouts, tube settings, install, MCP, troubleshooting |
 | `docs/bd45r-dmx-channels.md` | DMX channel reference and what was verified on real tubes |
 | `gvm.toml` | Reference rig config |
+
+## Reference documents
+
+| Document | What's in it |
+|---|---|
+| [GVM PRO-BD45R DMX Channel Table V1 (PDF)][gvm-dmx] | Official channel layout for all 28 DMX modes: CCT&RGB, CCT&HSI, CCT, RGB, HSI at each DMX PIXEL setting, EFFECT and PIXEL FX values |
+| [GVM PRO-BD25R / BD45R User Manual (PDF)][gvm-manual] | Controls and menus (Set up → CONTROL, DMX ADDR, DMX MODE, DMX PIXEL), modes, specifications, app pairing |
+| [docs/bd45r-dmx-channels.md](docs/bd45r-dmx-channels.md) | This project's condensed version of the channel table, plus what was verified on real tubes |
+| [docs/SETUP.md](docs/SETUP.md) | This project's setup guide |
+| [ANSI E1.27-2 DMX-over-Cat5 wiring guide (Pathway, PDF)][e127] | The RJ45 pinout the XLR-to-RJ45 adapter must follow |
+
+[gvm-dmx]: https://gvmled.com/wp-content/uploads/2025/12/GVM-PRO-BD45R-DMX%E9%80%9A%E9%81%93%E8%A1%A8%E3%80%90%E8%8B%B1%E6%96%87%E3%80%91V1-CP.pdf
+[gvm-manual]: https://gvmled.com/wp-content/uploads/2025/12/%E6%A3%92%E7%81%AFGVM-PRO-BD25R-BD45R%E8%AF%B4%E6%98%8E%E4%B9%A6%E3%80%90%E8%8B%B1%E6%96%87%E3%80%91V0.pdf
+[e127]: https://pathway.acuitybrands.com/-/media/abl/pathway/files/resources/reference-guides/pathway-dmx-wiring-guide.pdf
 
 ## License
 
