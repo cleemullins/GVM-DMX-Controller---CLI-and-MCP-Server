@@ -54,9 +54,34 @@ lights: "make the tubes warm white at 40%", "run a slow cyan meteor", "paint a s
 
 ## Wiring and pinouts
 
+### Parts
+
+| Part | Example | What to check |
+|---|---|---|
+| USB-to-DMX cable | **DSD TECH SH-RS09B, 3 m** ([the one used here, Amazon][dsd-amazon], [maker's page][dsd-official]) | FTDI FT232R "Open DMX" type. Its DMX end is a **female** 3-pin XLR |
+| XLR-to-RJ45 DMX adapter | [SIRS-E RJ45-to-XLR DMX adapter][sirs-adapter]: choose **Male, 3 PIN** (RJ45-XLRM3-MK2), or [Event Horizon 3-pin XLR-M to RJ45][eh-adapter-m]: choose pinout **"ESTA Standard (Pinout A)"** | **Must be ESTA-wired: XLR 3 → RJ45 1 (Data+), XLR 2 → RJ45 2 (Data−), XLR 1 → RJ45 7/8 (ground).** Needs a **male** XLR to mate with the SH-RS09B. Check it with a meter before use (see below) |
+| Cat5/Cat6 patch cable | any straight-through Ethernet cable | tube 1 DMX OUT → tube 2 DMX IN |
+| **DMX terminator (required)** | an RJ45 DMX terminator, or make one (below) | **120 Ω across Data+ and Data−** in the **last tube's DMX OUT**. RJ45 type, since the tube's jacks are RJ45 |
+
+> **Don't skip the terminator.** DMX is a 120 Ω bus. Without a terminator at the far end, the
+> signal reflects back down the cable, and the last tube can flicker, glitch or ignore commands,
+> especially on longer runs. To make one, wire a 120 Ω, ¼ W resistor between **pins 1 and 2** of an
+> RJ45 plug (or of a short patch cable cut off near the plug), and plug it into the last tube's
+> DMX OUT. A 3-pin XLR terminator (120 Ω between XLR pins 2 and 3) only works if that end of the
+> chain is XLR.
+
+> **Adapter warning.** Sellers rarely publish pinouts, and many "XLR to RJ45" or "DMX" adapters
+> (audio types, LED-strip controllers) are wired differently. One tested for this project mapped
+> XLR 1/2/3 to RJ45 1/6/7, and the tubes only flickered. SIRS-E lists RJ45 pin 1 Data+ (white/orange),
+> pin 2 Data− (orange) and pins 7/8 ground, matching XLR pins 3/2/1 by wire colour. Event Horizon
+> builds to the pinout you select. Neither has been tested with these tubes, so check any adapter
+> with a meter, or build one from the table below.
+
+### Pinouts
+
 ```
 Laptop USB ─ USB-DMX cable (XLR) ─ XLR→RJ45 DMX adapter ─▶ Tube 1 DMX IN
-                                   Tube 1 DMX OUT ─ Cat5 ─▶ Tube 2 DMX IN ─ Tube 2 DMX OUT ─ terminator
+                                   Tube 1 DMX OUT ─ Cat5 ─▶ Tube 2 DMX IN ─ Tube 2 DMX OUT ─ 120 Ω terminator
 ```
 
 The tubes' DMX jacks are RJ45, so the XLR end of the USB cable needs an adapter, and **the adapter
@@ -332,6 +357,10 @@ The tests don't need hardware. CI runs them on every push (see `.github/workflow
 
 [gvm-dmx]: https://gvmled.com/wp-content/uploads/2025/12/GVM-PRO-BD45R-DMX%E9%80%9A%E9%81%93%E8%A1%A8%E3%80%90%E8%8B%B1%E6%96%87%E3%80%91V1-CP.pdf
 [gvm-manual]: https://gvmled.com/wp-content/uploads/2025/12/%E6%A3%92%E7%81%AFGVM-PRO-BD25R-BD45R%E8%AF%B4%E6%98%8E%E4%B9%A6%E3%80%90%E8%8B%B1%E6%96%87%E3%80%91V0.pdf
+[dsd-official]: https://www.deshide.com/product-details_SH-RS09B.html
+[dsd-amazon]: https://www.amazon.com/dp/B0F2MQZCWR
+[sirs-adapter]: https://sirs-e.us/products/rj45-xlr-female-male-dmx-cable
+[eh-adapter-m]: https://eventhorizon-srv.com/shop/dmx-3pin-xlrm-rj45-cable-p-3545
 [e127]: https://pathway.acuitybrands.com/-/media/abl/pathway/files/resources/reference-guides/pathway-dmx-wiring-guide.pdf
 
 ## License

@@ -24,11 +24,19 @@ Contents
 | Item | Used here | Notes |
 |---|---|---|
 | Lights | 2 × GVM PRO-BD45R 48" RGB tubes | 33 pixels each; DMX IN and DMX OUT are RJ45 jacks |
-| USB-to-DMX interface | DSD TECH SH-RS09B (3 m) | FTDI FT232R "Open DMX" type; the laptop generates the DMX timing |
-| XLR-to-RJ45 adapter | **must be wired for DMX (ESTA)**, see §2 | Generic "audio" adapters are wired differently and do not work |
+| USB-to-DMX interface | DSD TECH SH-RS09B, 3 m: [the one used here (Amazon)](https://www.amazon.com/dp/B0F2MQZCWR), [maker's page](https://www.deshide.com/product-details_SH-RS09B.html) | FTDI FT232R "Open DMX" type; the laptop generates the DMX timing. DMX end is a **female** 3-pin XLR |
+| XLR-to-RJ45 adapter | **must be wired for DMX (ESTA)**, see §2. Examples: [SIRS-E](https://sirs-e.us/products/rj45-xlr-female-male-dmx-cable) (choose **Male, 3 PIN**), [Event Horizon XLR-M to RJ45](https://eventhorizon-srv.com/shop/dmx-3pin-xlrm-rj45-cable-p-3545) (choose pinout **ESTA Standard (Pinout A)**) | Required pinout: XLR 3 → RJ45 1 (Data+), XLR 2 → RJ45 2 (Data−), XLR 1 → RJ45 7/8 (ground). **Male** XLR to mate with the SH-RS09B. Generic "audio" adapters are wired differently and do not work. Check with a meter |
 | Cat5/Cat6 patch cable | tube 1 DMX OUT → tube 2 DMX IN | Any standard straight-through Ethernet cable |
-| DMX terminator | in the last tube's DMX OUT | 120 Ω across Data+ / Data− |
+| **DMX terminator (required)** | in the **last** tube's DMX OUT | 120 Ω across Data+ / Data−, RJ45 pins 1 and 2 (see below) |
 | Laptop | Windows 11, Python 3.11+ | FTDI driver (installed automatically by Windows for the SH-RS09B) |
+
+### The terminator is required
+
+DMX is a 120 Ω bus, and the far end must be terminated. Without it the signal reflects back down
+the line, and the last tube can flicker, glitch or ignore commands. The tubes' jacks are RJ45, so
+use an **RJ45 DMX terminator**, or make one: solder a **120 Ω, ¼ W resistor between pins 1 and 2**
+of an RJ45 plug (a patch cable cut a few cm from the plug works), insulate it, and plug it into the
+last tube's DMX OUT. Only the last device in the chain gets a terminator.
 
 ## 2. Wiring and pinouts
 
@@ -37,7 +45,7 @@ Contents
 ```
 Laptop USB ─ SH-RS09B ─ XLR ─ [XLR→RJ45 DMX adapter] ─ RJ45 ─▶ Tube 1 DMX IN
                                                               Tube 1 DMX OUT ─ Cat5 ─▶ Tube 2 DMX IN
-                                                                                     Tube 2 DMX OUT ─ terminator
+                                                                                     Tube 2 DMX OUT ─ 120 Ω terminator
 ```
 
 - Always go into **DMX IN** and out of **DMX OUT**; the signal is one-way.
@@ -52,8 +60,8 @@ Laptop USB ─ SH-RS09B ─ XLR ─ [XLR→RJ45 DMX adapter] ─ RJ45 ─▶ Tub
 | 2 | Data − |
 | 3 | Data + |
 
-Pin numbers are moulded into the connector face. The SH-RS09B ends in a 3-pin XLR; the adapter
-must be the **opposite gender** so the two mate.
+Pin numbers are moulded into the connector face. The SH-RS09B ends in a **female** 3-pin XLR, so
+the adapter needs a **male** XLR.
 
 ### RJ45 (DMX over Cat5, ANSI/ESTA E1.27-2)
 
@@ -80,7 +88,7 @@ pin 1 is on the left, pin 8 on the right.
 Many adapters sold as "DMX" for LED-strip controllers or audio snakes are wired differently. One
 that was tested for this project mapped XLR 1/2/3 to RJ45 1/6/7. With it, tube 1 flickered at
 random and ignored commands, because its data pins were floating. If no ready-made adapter shows
-its pinout, build one: a female 3-pin XLR (screw-terminal "solderless" types are fine) and half a
+its pinout, build one: a male 3-pin XLR (screw-terminal "solderless" types are fine) and half a
 Cat5 patch cable, wired per the table above.
 
 ## 3. Settings on each tube
@@ -268,6 +276,7 @@ the CLI reports the adapter as busy.
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Tubes ignore everything; tube 1 flickers at random | XLR-to-RJ45 adapter not wired to ESTA | Check with a meter (§2); use or build a correct adapter |
+| Last tube glitches or flickers, first is fine | Missing or wrong terminator | 120 Ω across RJ45 pins 1-2 in the last tube's DMX OUT (§1) |
 | One tube ignores DMX but stays lit | That tube's CONTROL is still `Master` | Set CONTROL = DMX |
 | A whole tube shows one colour when a single pixel was set | That tube's DMX PIXEL is 33, not 1 | Set DMX PIXEL = 1 (and check DMX ADDR) |
 | Two tubes copy each other / interfere | Overlapping addresses | Use the address table in §3; `gvm info` lists each tube's channels |
