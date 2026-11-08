@@ -27,7 +27,7 @@ Contents
 | USB-to-DMX interface | DSD TECH SH-RS09B, 3 m: [the one used here (Amazon)](https://www.amazon.com/dp/B0F2MQZCWR), [maker's page](https://www.deshide.com/product-details_SH-RS09B.html) | FTDI FT232R "Open DMX" type; the laptop generates the DMX timing. DMX end is a **female** 3-pin XLR |
 | XLR-to-RJ45 adapter | **must be wired for DMX (ESTA)**, see §2. Examples: [SIRS-E](https://sirs-e.us/products/rj45-xlr-female-male-dmx-cable) (choose **Male, 3 PIN**), [Event Horizon XLR-M to RJ45](https://eventhorizon-srv.com/shop/dmx-3pin-xlrm-rj45-cable-p-3545) (choose pinout **ESTA Standard (Pinout A)**) | Required pinout: XLR 3 → RJ45 1 (Data+), XLR 2 → RJ45 2 (Data−), XLR 1 → RJ45 7/8 (ground). **Male** XLR to mate with the SH-RS09B. Generic "audio" adapters are wired differently and do not work. Check with a meter |
 | Cat5/Cat6 patch cable | tube 1 DMX OUT → tube 2 DMX IN | Any standard straight-through Ethernet cable |
-| **DMX terminator (required)** | in the **last** tube's DMX OUT | 120 Ω across Data+ / Data−, RJ45 pins 1 and 2 (see below) |
+| **DMX terminator (required)** | in the **last** tube's DMX OUT. [The one used here (Amazon)](https://www.amazon.com/dp/B07RVDK77Y) | 120 Ω across Data+ / Data−, RJ45 pins 1 and 2 (see below) |
 | Laptop | Windows 11, Python 3.11+ | FTDI driver (installed automatically by Windows for the SH-RS09B) |
 
 ### The terminator is required
@@ -102,6 +102,9 @@ and **+ / −** to change the value.
 | DMX ADDR | First DMX channel the tube listens to (1–512) | see the table below |
 | DMX MODE | Channel layout | **CCT&RGB** |
 | DMX PIXEL | LEDs per controllable group: 33, 11, 3 or 1 | **1** |
+
+`gvm setup` prints these values for whatever config is in use. In Claude, the MCP
+`light_setup_guide` tool returns the same information.
 
 ### Recommended setup (used by this project)
 

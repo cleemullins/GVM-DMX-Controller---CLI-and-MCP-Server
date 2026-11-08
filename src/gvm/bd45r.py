@@ -103,6 +103,13 @@ class BD45R:
         if address < 1 or self.last_channel > DMX_CHANNELS:
             raise ValueError(f"{self.name} needs channels {address}..{self.last_channel}, beyond 1..{DMX_CHANNELS}")
 
+    def menu_settings(self) -> dict[str, str]:
+        """What the tube's own Set up menu must show for this patch to work."""
+        settings = {"CONTROL": "DMX", "DMX ADDR": str(self.address), "DMX MODE": self.mode.label}
+        if self.mode not in (Mode.EFFECT, Mode.PIXEL_FX):
+            settings["DMX PIXEL"] = str(self.pixel)
+        return settings
+
     @property
     def segments(self) -> int:
         return PIXEL_SEGMENTS[self.pixel]

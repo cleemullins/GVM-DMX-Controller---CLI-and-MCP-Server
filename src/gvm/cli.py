@@ -13,14 +13,21 @@ import sys
 import time
 from pathlib import Path
 
-from . import animations
+from . import animations, setup_guide
 from .bd45r import EFFECTS, PIXEL_FX
 from .colors import parse_color
 from .config import TEMPLATE, FixtureConfig, RigConfig, find_config, user_config_path
 from .controller import Controller
 
 EXAMPLES = """\
+set up each tube first (gvm setup prints this for your config):
+  Set up menu (MODE until it shows, TAB = next item, +/- = change):
+    CONTROL = DMX   DMX MODE = CCT&RGB   DMX PIXEL = 1   DMX ADDR = 1 (tube 1), 232 (tube 2)
+  Wiring: SH-RS09B -> ESTA XLR-to-RJ45 adapter (XLR 3->RJ45 1, 2->2, 1->7/8) -> tube 1 IN,
+          tube 1 OUT -> tube 2 IN, 120 ohm terminator in the last tube's OUT.
+
 examples:
+  gvm setup                                  the exact light settings and wiring for your config
   gvm init                                   write a starter config to your user folder
   gvm info                                   show the patch and where the config came from
   gvm white 100 5600                         both tubes 100% at 5600 K
@@ -78,6 +85,11 @@ def _init(sub):
 
 def _info(sub):
     sub.add_parser("info", help="show the patch, config file and state file")
+
+
+def _setup(sub):
+    sub.add_parser("setup", aliases=["settings"],
+                   help="show the settings each light needs (CONTROL / DMX ADDR / DMX MODE / DMX PIXEL) and the wiring")
 
 
 def _ports(sub):
@@ -175,7 +187,7 @@ def _mcp(sub):
     sub.add_parser("mcp", help="run the MCP server over stdio (for Claude and other MCP clients)")
 
 
-_COMMANDS = [_init, _info, _ports, _white, _color, _hsi, _dim, _off, _paint, _fx, _ramp, _hwfx, _raw,
+_COMMANDS = [_setup, _init, _info, _ports, _white, _color, _hsi, _dim, _off, _paint, _fx, _ramp, _hwfx, _raw,
              _shell, _mcp]
 
 
@@ -217,6 +229,10 @@ def run(args: argparse.Namespace, ctl: Controller) -> None:
         for i, f in enumerate(ctl.layout(), 1):
             print(f"{i}. {f.name}: channels {f.address}-{f.last_channel}, {f.mode.label}, DMX PIXEL {f.pixel} "
                   f"({f.segments} segment{'s' * (f.segments > 1)}){', reversed' if f.reverse else ''}")
+            print("   set on the light: " + "  ".join(f"{k} = {v}" for k, v in f.menu_settings().items()))
+        print("run `gvm setup` for menu steps, wiring and the adapter pinout")
+    elif c in ("setup", "settings"):
+        print(setup_guide.render_text(ctl.layout()))
     elif c in ("white", "cct"):
         ctl.white(args.intensity, args.kelvin, args.gm, fixtures, segments)
     elif c == "color":
@@ -281,7 +297,7 @@ class Shell(cmd.Cmd):
     def default(self, line: str) -> None:
         try:
             args = self.parser.parse_args(shlex.split(line))
-            if args.command in ("shell", "mcp", "init", "ports"):
+            if args.command in ("shell", "mcp", "init", "ports"):  # setup/info work fine here
                 print("not available inside the shell")
                 return
             run(args, self.ctl)

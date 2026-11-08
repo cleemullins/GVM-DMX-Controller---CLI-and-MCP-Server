@@ -14,16 +14,52 @@ lights: "make the tubes warm white at 40%", "run a slow cyan meteor", "paint a s
 - Every rig setting (adapter, addresses, modes, pixel layout, orientation) comes from a config file
   **or** command-line options / MCP tool parameters
 
-> **New here? Read the [setup guide](docs/SETUP.md) first.** It covers the wiring, the XLR-to-RJ45
-> pinout (the most common reason nothing works), the settings on each tube, install, first tests,
-> connecting Claude, and troubleshooting.
+> **New here?** Set each tube's menu first ([Settings on each light](#settings-on-each-light)), then
+> read the [setup guide](docs/SETUP.md). It covers the wiring, the XLR-to-RJ45 pinout (the most
+> common reason nothing works), install, first tests, connecting Claude, and troubleshooting.
 >
 > GVM's own documents: the **[BD45R DMX channel table (PDF)][gvm-dmx]** and the
 > **[BD25R / BD45R user manual (PDF)][gvm-manual]**. Cable pinouts: **[Wiring and pinouts](#wiring-and-pinouts)**.
 > More under [Reference documents](#reference-documents).
 
+## Settings on each light
+
+**Nothing works until each tube's own menu matches the software's patch.** On each BD45R, press
+**MODE** until the **Set up** menu appears, press **TAB** to move between items and **+ / −** to
+change them:
+
+| Set up menu item | Tube 1 | Tube 2 | Why |
+|---|---|---|---|
+| **CONTROL** | **DMX** | **DMX** | In `Master` mode the tube ignores DMX. In DMX mode the GVM app stops working |
+| **DMX ADDR** | **1** | **232** | Each tube uses 231 channels (1–231 and 232–462), so they mustn't overlap |
+| **DMX MODE** | **CCT&RGB** | **CCT&RGB** | Per pixel: intensity, colour temperature, green/magenta, white↔colour crossfade, R, G, B |
+| **DMX PIXEL** | **1** | **1** | Every one of the 33 pixels is controlled separately. All effects run in software, so the menus never need changing again |
+
+Then match the physical orientation in [`gvm.toml`](gvm.toml) with `reverse`. The tube's pixel 1
+is at the end *away* from its controls. Set `reverse = true` for a tube whose controls are on your
+left, so segment 1 is on your left for every tube.
+
+**The software shows the same settings for the config in use**, so they can't drift apart:
+
+- `gvm setup` prints the exact menu values per tube, the wiring chain, the adapter pinout and the
+  terminator. `gvm info` adds a `set on the light:` line under each tube.
+- The MCP server's `rig_info` tool includes `set_on_light` for each tube, and its
+  `light_setup_guide` tool returns the full checklist, so Claude can walk you through it.
+
+Other layouts (other modes, fewer pixels, more tubes) are in
+[setup §3](docs/SETUP.md#3-settings-on-each-tube), including how to work out addresses.
+
+| Symptom | Setting to check |
+|---|---|
+| A tube ignores everything but stays lit | CONTROL is still `Master` |
+| Setting one pixel lights the whole tube | DMX PIXEL is 33, not 1 |
+| Tubes copy each other or interfere | DMX ADDR overlaps (tube 2 must be 232) |
+| Effects run backwards on one tube | `reverse` in `gvm.toml` |
+| Tubes flicker or ignore DMX entirely | the XLR-to-RJ45 adapter's pinout, or a missing terminator (see [Wiring and pinouts](#wiring-and-pinouts)) |
+
 ## Contents
 
+- [Settings on each light](#settings-on-each-light)
 - [How it fits together](#how-it-fits-together)
 - [Wiring and pinouts](#wiring-and-pinouts)
 - [Quick start](#quick-start)
@@ -61,7 +97,7 @@ lights: "make the tubes warm white at 40%", "run a slow cyan meteor", "paint a s
 | USB-to-DMX cable | **DSD TECH SH-RS09B, 3 m** ([the one used here, Amazon][dsd-amazon], [maker's page][dsd-official]) | FTDI FT232R "Open DMX" type. Its DMX end is a **female** 3-pin XLR |
 | XLR-to-RJ45 DMX adapter | [SIRS-E RJ45-to-XLR DMX adapter][sirs-adapter]: choose **Male, 3 PIN** (RJ45-XLRM3-MK2), or [Event Horizon 3-pin XLR-M to RJ45][eh-adapter-m]: choose pinout **"ESTA Standard (Pinout A)"** | **Must be ESTA-wired: XLR 3 → RJ45 1 (Data+), XLR 2 → RJ45 2 (Data−), XLR 1 → RJ45 7/8 (ground).** Needs a **male** XLR to mate with the SH-RS09B. Check it with a meter before use (see below) |
 | Cat5/Cat6 patch cable | any straight-through Ethernet cable | tube 1 DMX OUT → tube 2 DMX IN |
-| **DMX terminator (required)** | an RJ45 DMX terminator, or make one (below) | **120 Ω across Data+ and Data−** in the **last tube's DMX OUT**. RJ45 type, since the tube's jacks are RJ45 |
+| **DMX terminator (required)** | [the one used here (Amazon)][terminator], or make one (below) | **120 Ω across Data+ and Data−** in the **last tube's DMX OUT**. RJ45 type, since the tube's jacks are RJ45 |
 
 > **Don't skip the terminator.** DMX is a 120 Ω bus. Without a terminator at the far end, the
 > signal reflects back down the cable, and the last tube can flicker, glitch or ignore commands,
@@ -104,17 +140,11 @@ build one, and connector genders. The standard itself is in the
 
 ## Quick start
 
-Hardware, wiring and tube settings are covered step by step in [docs/SETUP.md](docs/SETUP.md). In
-short, set each tube's **Set up** menu to:
-
-| | Tube 1 | Tube 2 |
-|---|---|---|
-| CONTROL | DMX | DMX |
-| DMX MODE | CCT&RGB | CCT&RGB |
-| DMX PIXEL | 1 | 1 |
-| DMX ADDR | 1 | 232 |
-
-Then install the software. It needs Python 3.11+ and the FTDI driver, which Windows installs
+1. Wire it up ([Wiring and pinouts](#wiring-and-pinouts)): USB cable → ESTA XLR-to-RJ45 adapter →
+   tube 1 IN, tube 1 OUT → tube 2 IN, terminator in tube 2 OUT.
+2. Set each tube's menu ([Settings on each light](#settings-on-each-light)): CONTROL **DMX**, DMX
+   MODE **CCT&RGB**, DMX PIXEL **1**, DMX ADDR **1** and **232**.
+3. Install the software. It needs Python 3.11+ and the FTDI driver, which Windows installs
 automatically for the cable.
 
 ```bash
@@ -123,14 +153,14 @@ cd gvm
 python -m pip install -e .
 ```
 
-Check the adapter is seen and the patch looks right:
+Check the adapter is seen, and compare the settings the software expects with each tube's menu:
 
 ```bash
 gvm ports
 ```
 
 ```bash
-gvm info
+gvm setup
 ```
 
 Then try the lights:
@@ -154,6 +184,7 @@ gvm [rig options] COMMAND [command options]
 
 | Command | What it does | Example |
 |---|---|---|
+| `setup` (`settings`) | Print the menu settings each tube needs (CONTROL / DMX ADDR / DMX MODE / DMX PIXEL), wiring, pinout, terminator | `gvm setup` |
 | `init` | Write a starter config to `%APPDATA%\gvm\gvm.toml` | `gvm init` |
 | `info` | Show config source, state file, adapter, each tube's channels | `gvm info` |
 | `ports` | List COM ports and FTDI adapters | `gvm ports` |
@@ -227,7 +258,8 @@ claude mcp add --scope user gvm-lights -- python -m gvm mcp
 
 | Tool | Parameters | Does |
 |---|---|---|
-| `rig_info` | – | Tubes (names, channels, mode, segments, reverse), adapter, effect list, running effect |
+| `rig_info` | – | Tubes (names, channels, mode, segments, reverse, **`set_on_light`** menu values), adapter, effect list, running effect |
+| `light_setup_guide` | – | Menu steps, the CONTROL / DMX ADDR / DMX MODE / DMX PIXEL values per tube, wiring, adapter pinout, terminator, orientation |
 | `set_white` | `intensity`, `kelvin`, `green_magenta`, `fixtures`, `segments` | White light |
 | `set_color` | `color`, `intensity`, `fixtures`, `segments` | Solid colour |
 | `set_hsi` | `hue`, `saturation`, `intensity`, `fixtures`, `segments` | Colour by hue |
@@ -359,6 +391,7 @@ The tests don't need hardware. CI runs them on every push (see `.github/workflow
 [gvm-manual]: https://gvmled.com/wp-content/uploads/2025/12/%E6%A3%92%E7%81%AFGVM-PRO-BD25R-BD45R%E8%AF%B4%E6%98%8E%E4%B9%A6%E3%80%90%E8%8B%B1%E6%96%87%E3%80%91V0.pdf
 [dsd-official]: https://www.deshide.com/product-details_SH-RS09B.html
 [dsd-amazon]: https://www.amazon.com/dp/B0F2MQZCWR
+[terminator]: https://www.amazon.com/dp/B07RVDK77Y
 [sirs-adapter]: https://sirs-e.us/products/rj45-xlr-female-male-dmx-cable
 [eh-adapter-m]: https://eventhorizon-srv.com/shop/dmx-3pin-xlrm-rj45-cable-p-3545
 [e127]: https://pathway.acuitybrands.com/-/media/abl/pathway/files/resources/reference-guides/pathway-dmx-wiring-guide.pdf

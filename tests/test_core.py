@@ -62,6 +62,17 @@ def test_find_config_prefers_env(tmp_path, monkeypatch):
     assert [f.name for f in RigConfig.load(cfg).fixtures] == ["a"]
 
 
+def test_menu_settings_and_setup_guide():
+    from gvm import setup_guide
+
+    tube = BD45R(None, 232, Mode.CCT_RGB, 1, "tube2")
+    assert tube.menu_settings() == {"CONTROL": "DMX", "DMX ADDR": "232", "DMX MODE": "CCT&RGB", "DMX PIXEL": "1"}
+    assert "DMX PIXEL" not in BD45R(None, 1, Mode.PIXEL_FX).menu_settings()
+    text = setup_guide.render_text([tube])
+    assert "232" in text and "CCT&RGB" in text and "terminator" in text
+    assert setup_guide.guide([tube])["tubes"][0]["set_on_light"]["DMX ADDR"] == "232"
+
+
 def test_controller_state_roundtrip(tmp_path):
     ctl = Controller(RigConfig(fixtures=[FixtureConfig("t", 1, Mode.CCT_RGB, 1)]), tmp_path / "u.bin")
     ctl.save_state(bytes([7]) * 512)

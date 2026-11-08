@@ -11,7 +11,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
-from . import animations
+from . import animations, setup_guide
 from .bd45r import CCT_MAX_K, CCT_MIN_K
 from .colors import NAMED, parse_color
 from .config import FixtureConfig
@@ -22,7 +22,13 @@ Controls GVM BD45R 48" RGB LED tubes over DMX. Call rig_info first to learn the 
 and segment counts. Tubes keep their last look until changed. Colours accept a name
 ({", ".join(NAMED)}), #rrggbb, "r,g,b" or "hue:DEG[,SAT]". Intensities are 0-100 %,
 colour temperature {CCT_MIN_K}-{CCT_MAX_K} K. Segment 1 is the operator's left end of a tube.
-Effects run in the background until stop_effect or another lighting call."""
+Effects run in the background until stop_effect or another lighting call.
+
+Each tube's own Set up menu must match the patch: CONTROL = DMX, and DMX ADDR / DMX MODE /
+DMX PIXEL as listed under set_on_light in rig_info (standard rig: CCT&RGB, DMX PIXEL 1,
+addresses 1 and 232). If a tube doesn't respond, flickers, or shows one colour along its whole
+length, call light_setup_guide and walk the user through the menu, wiring, adapter pinout and
+terminator."""
 
 Fixtures = Annotated[list[str] | None, Field(description="tube names or numbers; omit for all tubes")]
 Segments = Annotated[list[int] | None, Field(description="segment numbers (1 = operator's left); omit for whole tube")]
@@ -45,12 +51,19 @@ def build_server(ctl: Controller):
             "adapter": {"driver": ctl.config.driver, "device": ctl.config.device or "first device"},
             "fixtures": [
                 {"name": f.name, "channels": [f.address, f.last_channel], "mode": f.mode.label,
-                 "dmx_pixel": f.pixel, "segments": f.segments, "reverse": f.reverse}
+                 "dmx_pixel": f.pixel, "segments": f.segments, "reverse": f.reverse,
+                 "set_on_light": f.menu_settings()}
                 for f in ctl.layout()
             ],
             "effects": animations.describe(),
             **status(),
         }
+
+    @server.tool()
+    def light_setup_guide() -> dict[str, Any]:
+        """How to set up the lights for the current patch: Set up menu steps, the exact CONTROL / DMX ADDR /
+        DMX MODE / DMX PIXEL values per tube, wiring chain, XLR-to-RJ45 pinout, terminator and orientation."""
+        return setup_guide.guide(ctl.layout())
 
     @server.tool()
     def set_white(intensity: Intensity = 100,
@@ -125,7 +138,8 @@ def build_server(ctl: Controller):
                       ) -> dict[str, Any]:
         """Change the patch or adapter for this server session (the config file is not modified).
 
-        Use this when a tube's DMX ADDR, DMX MODE or DMX PIXEL has been changed on the light.
+        Use this when a tube's DMX ADDR, DMX MODE or DMX PIXEL has been changed on the light: each
+        spec's ADDRESS, MODE and PIXEL must equal what the tube's Set up menu shows.
         """
         ctl.stop()
         if fixtures is not None:
