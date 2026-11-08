@@ -287,3 +287,8 @@ The tests don't need hardware. CI runs them on every push (see `.github/workflow
 | `docs/SETUP.md` | Setup guide: wiring, pinouts, tube settings, install, MCP, troubleshooting |
 | `docs/bd45r-dmx-channels.md` | DMX channel reference and what was verified on real tubes |
 | `gvm.toml` | Reference rig config |
+
+## License
+
+[MIT](LICENSE) © 2026 Chris Mullins. GVM and BD45R are trademarks of their owner; this project is
+not affiliated with or endorsed by GVM.

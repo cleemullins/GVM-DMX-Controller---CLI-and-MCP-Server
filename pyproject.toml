@@ -7,6 +7,8 @@ name = "gvm"
 version = "0.2.0"
 description = "Control GVM BD45R LED tube lights over DMX512: CLI and local MCP server"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = ["pyserial>=3.5", "ftd2xx>=1.3", "mcp>=2.3"]
 
