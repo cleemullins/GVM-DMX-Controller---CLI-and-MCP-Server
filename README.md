@@ -370,6 +370,7 @@ The tests don't need hardware. CI runs them on every push (see `.github/workflow
 | `src/gvm/controller.py` | Shared engine for the CLI and MCP: sessions, saved state, background effects |
 | `src/gvm/animations.py` | Software pixel and rig effects |
 | `src/gvm/colors.py` | Colour parsing and gradients |
+| `src/gvm/setup_guide.py` | Light settings / wiring checklist for `gvm setup` and `light_setup_guide` |
 | `src/gvm/cli.py` | The `gvm` command |
 | `src/gvm/mcp_server.py` | The MCP server |
 | `docs/SETUP.md` | Setup guide: wiring, pinouts, tube settings, install, MCP, troubleshooting |
