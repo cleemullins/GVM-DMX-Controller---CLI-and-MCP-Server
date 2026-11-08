@@ -19,11 +19,13 @@ lights: "make the tubes warm white at 40%", "run a slow cyan meteor", "paint a s
 > connecting Claude, and troubleshooting.
 >
 > GVM's own documents: the **[BD45R DMX channel table (PDF)][gvm-dmx]** and the
-> **[BD25R / BD45R user manual (PDF)][gvm-manual]**. More under [Reference documents](#reference-documents).
+> **[BD25R / BD45R user manual (PDF)][gvm-manual]**. Cable pinouts: **[Wiring and pinouts](#wiring-and-pinouts)**.
+> More under [Reference documents](#reference-documents).
 
 ## Contents
 
 - [How it fits together](#how-it-fits-together)
+- [Wiring and pinouts](#wiring-and-pinouts)
 - [Quick start](#quick-start)
 - [CLI reference](#cli-reference)
 - [MCP server](#mcp-server)
@@ -49,6 +51,31 @@ lights: "make the tubes warm white at 40%", "run a slow cyan meteor", "paint a s
   briefly and closes it again.
 - **Shared state:** the last universe is saved to a state file and restored on the next command,
   so the CLI and the MCP server can take turns, and changing one tube never resets another.
+
+## Wiring and pinouts
+
+```
+Laptop USB ─ USB-DMX cable (XLR) ─ XLR→RJ45 DMX adapter ─▶ Tube 1 DMX IN
+                                   Tube 1 DMX OUT ─ Cat5 ─▶ Tube 2 DMX IN ─ Tube 2 DMX OUT ─ terminator
+```
+
+The tubes' DMX jacks are RJ45, so the XLR end of the USB cable needs an adapter, and **the adapter
+must be wired to the DMX-over-Cat5 standard (ANSI/ESTA E1.27-2)**. Many "XLR to RJ45" adapters
+(audio types, and some sold for LED-strip controllers) use other pins. With one of those, the tubes
+flicker or ignore DMX.
+
+| Signal | 3-pin XLR | RJ45 pin | T568B wire colour |
+|---|---|---|---|
+| Data + | 3 | **1** | white/orange |
+| Data − | 2 | **2** | orange |
+| Common / ground | 1 | **7** (and optionally 8) | white/brown (brown) |
+
+RJ45 pins are numbered 1–8 left to right with the gold contacts facing you, the clip at the back
+and the cable hanging down. The full details are in the setup guide:
+[wiring and pinouts](docs/SETUP.md#2-wiring-and-pinouts), including how to
+[check an adapter with a multimeter](docs/SETUP.md#checking-an-adapter-with-a-multimeter), how to
+build one, and connector genders. The standard itself is in the
+[ANSI E1.27-2 wiring guide (PDF)][e127].
 
 ## Quick start
 
@@ -300,6 +327,7 @@ The tests don't need hardware. CI runs them on every push (see `.github/workflow
 | [GVM PRO-BD25R / BD45R User Manual (PDF)][gvm-manual] | Controls and menus (Set up → CONTROL, DMX ADDR, DMX MODE, DMX PIXEL), modes, specifications, app pairing |
 | [docs/bd45r-dmx-channels.md](docs/bd45r-dmx-channels.md) | This project's condensed version of the channel table, plus what was verified on real tubes |
 | [docs/SETUP.md](docs/SETUP.md) | This project's setup guide |
+| [docs/SETUP.md § Wiring and pinouts](docs/SETUP.md#2-wiring-and-pinouts) | XLR and RJ45 pinouts, the wiring chain, testing and building an adapter |
 | [ANSI E1.27-2 DMX-over-Cat5 wiring guide (Pathway, PDF)][e127] | The RJ45 pinout the XLR-to-RJ45 adapter must follow |
 
 [gvm-dmx]: https://gvmled.com/wp-content/uploads/2025/12/GVM-PRO-BD45R-DMX%E9%80%9A%E9%81%93%E8%A1%A8%E3%80%90%E8%8B%B1%E6%96%87%E3%80%91V1-CP.pdf
