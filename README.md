@@ -64,7 +64,7 @@ Other layouts (other modes, fewer pixels, more tubes) are in
 - [Wiring and pinouts](#wiring-and-pinouts)
 - [Quick start](#quick-start)
 - [CLI reference](#cli-reference)
-- [MCP server](#mcp-server)
+- [Using the MCP server](#using-the-mcp-server)
 - [Configuration](#configuration)
 - [Effects](#effects)
 - [Python library](#python-library)
@@ -176,6 +176,8 @@ gvm fx all
 If `gvm` isn't found, use `python -m gvm` instead, or add Python's Scripts folder to PATH (see
 [setup §5](docs/SETUP.md#5-install-the-software)).
 
+4. Connect Claude or another assistant: see [Using the MCP server](#using-the-mcp-server).
+
 ## CLI reference
 
 ```
@@ -226,35 +228,145 @@ gvm --driver serial --device COM3 info
 
 Run `gvm --help` or `gvm COMMAND --help` for every option.
 
-## MCP server
+## Using the MCP server
 
-`gvm mcp` runs a local MCP server over **stdio**: the client starts it as a subprocess, and no
-network port is opened. It takes the same rig options as the CLI, e.g. `gvm --config PATH mcp`.
+The MCP server lets Claude, or any other MCP-capable assistant, run the lights in plain language:
+"set both tubes to 3200 K at 40%", "make tube 2 deep blue", "run a slow cyan meteor", "paint a
+sunset gradient", "stop the effect". It runs **locally over stdio**: your MCP client starts
+`gvm mcp` as a subprocess on your computer and talks to it over stdin/stdout. No network port is
+opened, and nothing leaves the machine except what the assistant itself sends.
 
-**Claude Code in this folder:** the repo's [`.mcp.json`](.mcp.json) registers it. Approve the
-`gvm-lights` server when Claude Code asks.
+### 1. Before you start
 
-**Claude Code anywhere:** make a per-user config first (`gvm init`, then edit it, or copy
-`gvm.toml` to `%APPDATA%\gvm\gvm.toml`), then:
+1. **The lights work from the CLI.** Wiring, tube settings and install are done (see
+   [Quick start](#quick-start)), and `gvm white 50 5600` lights both tubes. If the CLI can't drive
+   the lights, the MCP server can't either.
+2. **Find the Python that has `gvm` installed.** MCP clients often don't share your terminal's
+   PATH, so use the full path to `python.exe` in client configs. To print it:
+
+   ```bash
+   python -c "import sys; print(sys.executable)"
+   ```
+
+   It looks like `C:\Users\<you>\AppData\Local\Python\pythoncore-3.15-64\python.exe`.
+3. **Make the config findable.** The client starts the server in a folder of its choosing, so
+   `./gvm.toml` may not be found. Either pass `--config` in the client config (as in the examples
+   below), or put the config in the per-user location that `gvm` always checks:
+
+   ```bash
+   gvm init
+   ```
+
+   This writes `%APPDATA%\gvm\gvm.toml`. Edit it to match your tubes, or copy this repo's
+   `gvm.toml` over it.
+4. **Check the server starts.** This prints nothing and waits for a client; stop it with Ctrl+C.
+   An error here, such as a missing config or a bad patch, is the same one a client would hit.
+
+   ```bash
+   python -m gvm mcp
+   ```
+
+### 2. Connect it to your assistant
+
+The server is the command `python -m gvm [rig options] mcp`. Every client below just needs that
+command and its arguments. Rig options (`--config`, `--patch`, `--driver`, `--device`) go
+**before** `mcp`.
+
+**Claude Code, in this repo.** Nothing to do: the repo's [`.mcp.json`](.mcp.json) declares the
+`gvm-lights` server. Open Claude Code in this folder and approve the server when asked. It uses
+`python` from your PATH and `./gvm.toml`.
+
+**Claude Code, in any folder.** Register it once for your user (with a per-user config, step 1.3):
 
 ```bash
 claude mcp add --scope user gvm-lights -- python -m gvm mcp
 ```
 
-**Claude Desktop:** add to `claude_desktop_config.json` (Settings → Developer → Edit Config):
+Use the full `python.exe` path instead of `python` if it isn't on your PATH, and add
+`--config C:\path\to\gvm.toml` before `mcp` to pin a config.
+
+**Claude Desktop.** Settings → Developer → **Edit Config** opens `claude_desktop_config.json`
+(`%APPDATA%\Claude\` on Windows, `~/Library/Application Support/Claude/` on macOS). Add the server,
+save, and **fully quit and reopen** Claude Desktop:
 
 ```json
 {
   "mcpServers": {
     "gvm-lights": {
-      "command": "python",
+      "command": "C:\\Users\\<you>\\AppData\\Local\\Python\\pythoncore-3.15-64\\python.exe",
       "args": ["-m", "gvm", "--config", "C:\\git\\gvm\\gvm.toml", "mcp"]
     }
   }
 }
 ```
 
-### Tools
+**Other MCP clients** (VS Code, Cursor, Windsurf, Zed, and others) take the same command and
+arguments in their own config file. For example, VS Code's `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "gvm-lights": {
+      "type": "stdio",
+      "command": "C:\\path\\to\\python.exe",
+      "args": ["-m", "gvm", "--config", "C:\\git\\gvm\\gvm.toml", "mcp"]
+    }
+  }
+}
+```
+
+Any client that supports **stdio** MCP servers works. The server needs no environment variables or
+API keys.
+
+**Without an assistant.** The [MCP Inspector](https://github.com/modelcontextprotocol/inspector)
+lets you call the tools by hand in a browser (needs Node.js):
+
+```bash
+npx @modelcontextprotocol/inspector python -m gvm mcp
+```
+
+### 3. Check it's connected
+
+- **Claude Code:** run `/mcp`. `gvm-lights` should show as connected, with its 12 tools.
+- **Claude Desktop:** the tools/connectors menu in the chat box should list `gvm-lights`.
+- Then ask: **"What lights do you have?"** The assistant should call `rig_info` and report two tubes
+  with 33 segments each, plus the menu settings each tube needs.
+
+### 4. Things to ask
+
+| Ask | The assistant uses |
+|---|---|
+| "Set both tubes to 100% at 5600 K." | `set_white` |
+| "Make tube 2 warm, 3200 K at 30%, and leave tube 1 alone." | `set_white` with `fixtures` |
+| "Turn tube 1 red and tube 2 blue." | `set_color` twice |
+| "Dim everything to 20%." | `set_intensity` |
+| "Light just the left five pixels of tube 1 in orange." | `set_color` with `segments: [1,2,3,4,5]` |
+| "Paint a sunset gradient across both tubes." | `paint` with colour stops |
+| "Run a slow cyan meteor." / "Do the table ping pong for 30 seconds." | `start_effect` |
+| "Stop the effect." / "Lights off." | `stop_effect` / `lights_off` |
+| "Tube 2 isn't responding. What should its menu say?" | `rig_info` / `light_setup_guide` |
+| "I moved tube 2 to address 300." | `configure_rig` |
+
+Colours can be names (`red`, `amber`, `teal`, …), `#rrggbb`, `r,g,b` or `hue:DEG[,SAT]`.
+Intensities are 0–100 %. Segment 1 is the operator's left end of each tube.
+
+### 5. How it behaves
+
+- **Static tools** (`set_white`, `set_color`, `set_hsi`, `set_intensity`, `paint`, `lights_off`)
+  return as soon as the look is set. The tubes keep it after that, even when the server stops.
+- **Effects run in the background.** `start_effect` returns immediately, and the animation keeps
+  going until `stop_effect`, another lighting tool, its `seconds` running out, or the client
+  closing the server. Then the tubes go dark.
+- **One adapter, one user at a time.** A running effect holds the USB-DMX adapter, so stop it
+  before using the `gvm` CLI or other DMX software, or they report the adapter as busy. Static
+  changes hold it for only a fraction of a second.
+- **Shared state.** The last values of all 512 channels are saved per user, so the MCP server and
+  the CLI can take turns without resetting each other's tubes.
+- **The patch can change mid-session.** If a tube's DMX ADDR, DMX MODE or DMX PIXEL is changed on
+  the light, tell the assistant: it calls `configure_rig` for that session. Update `gvm.toml` to
+  make the change permanent.
+
+### 6. Tools
 
 | Tool | Parameters | Does |
 |---|---|---|
@@ -266,16 +378,24 @@ claude mcp add --scope user gvm-lights -- python -m gvm mcp
 | `set_intensity` | `intensity`, `fixtures`, `segments` | Brightness only |
 | `paint` | `colors` (stops, or one per segment), `intensity`, `fixtures` | Gradient / per-pixel colours |
 | `lights_off` | `fixtures` | Off (stops any effect) |
-| `start_effect` | `name`, `seconds` (0 = until stopped), `speed` 1–10, `intensity`, `color`, `background`, `colors`, `block`, `tail`, `wavelength`, `stagger`, `fixtures` | Background animation |
+| `start_effect` | `name`, `seconds` (0 = until stopped), `speed` 1–10, `intensity`, `color`, `background`, `colors`, `block`, `tail`, `wavelength`, `stagger`, `fixtures` | Background animation (see [Effects](#effects)) |
 | `stop_effect` | – | Stop the running animation |
 | `configure_rig` | `fixtures` (`NAME:ADDR[:MODE[:PIXEL[:reverse]]]` specs), `driver`, `device` | Change the patch for this session (file untouched) |
 | `set_dmx_channels` | `values` {channel: value} | Raw DMX |
 
-Static tools return as soon as the look is set. `start_effect` returns immediately and the
-animation keeps running until `stop_effect`, another lighting tool, or its `seconds` run out.
+`fixtures` takes tube names or numbers (omit for all), and `segments` takes 1–33 (omit for the
+whole tube).
 
-Only one program can use the adapter at a time: while an MCP effect runs, CLI commands report the
-adapter as busy.
+### 7. Troubleshooting the MCP server
+
+| Problem | Fix |
+|---|---|
+| Server shows as failed / disconnected | Run the client's exact command in a terminal (step 1.4) to see the error |
+| `python` not found, or `No module named gvm` | Use the full path to the `python.exe` that ran `pip install -e .` (step 1.2) |
+| `no config found` | Add `--config C:\path\to\gvm.toml` before `mcp`, or run `gvm init` (step 1.3) |
+| Tools work but the lights don't change | Same checks as the CLI: try `gvm white 50`, then see [Settings on each light](#settings-on-each-light) and [Wiring and pinouts](#wiring-and-pinouts) |
+| `couldn't open the DMX adapter` | A CLI command, another server instance or other DMX software has it. Stop that, or call `stop_effect` |
+| New tools don't appear after updating | Restart the client (Claude Desktop: fully quit) so it restarts the server |
 
 ## Configuration
 

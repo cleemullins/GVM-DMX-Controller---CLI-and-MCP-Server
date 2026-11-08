@@ -236,6 +236,10 @@ Run these one at a time and watch the tubes:
 
 ## 8. Connect the MCP server
 
+The README's [Using the MCP server](../README.md#using-the-mcp-server) section is the full guide:
+prerequisites, Claude Code, Claude Desktop and other clients, checking the connection, example
+requests, behaviour and troubleshooting. The essentials:
+
 The server runs locally over stdio: the MCP client starts `gvm mcp` itself, and no network port
 is opened.
 
