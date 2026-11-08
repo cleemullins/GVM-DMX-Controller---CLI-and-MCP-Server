@@ -35,20 +35,6 @@ change them:
 | **DMX MODE** | **CCT&RGB** | **CCT&RGB** | Per pixel: intensity, colour temperature, green/magenta, white↔colour crossfade, R, G, B |
 | **DMX PIXEL** | **1** | **1** | Every one of the 33 pixels is controlled separately. All effects run in software, so the menus never need changing again |
 
-### Using more than one tube
-
-With more than one tube, effects can play across the whole rig, not just along each tube: a chase
-that runs from one tube into the next, colors that travel down a row of tubes, or a ping-pong ball
-that bounces between two tubes facing each other. For that, the software needs to know which way
-each tube is mounted. Each tube's pixel order can be flipped with `reverse` (in `gvm.toml`, or
-`:reverse` in a `--patch` spec).
-
-You don't have to work this out yourself. Describe your layout to the agent, for example:
-
-> "My two tubes face each other across a table. Set them up so effects travel around the table."
-
-It runs a test pattern, asks what you see, and sets `reverse` for each tube to match.
-
 **The software shows the same settings for the config in use**, so they can't drift apart:
 
 - `gvm setup` prints the exact menu values per tube, the wiring chain, the adapter pinout and the
@@ -66,6 +52,20 @@ Other layouts (other modes, fewer pixels, more tubes) are in
 | Tubes copy each other or interfere | DMX ADDR overlaps (tube 2 must be 232) |
 | Effects run the wrong way on one tube | `reverse` for that tube, or ask the agent to fix it |
 | Tubes flicker or ignore DMX entirely | the XLR-to-RJ45 adapter's pinout, or a missing terminator (see [Wiring and pinouts](#wiring-and-pinouts)) |
+
+### Using more than one tube
+
+With more than one tube, effects can play across the whole rig, not just along each tube: a chase
+that runs from one tube into the next, colors that travel down a row of tubes, or a ping-pong ball
+that bounces between two tubes facing each other. For that, the software needs to know which way
+each tube is mounted. Each tube's pixel order can be flipped with `reverse` (in `gvm.toml`, or
+`:reverse` in a `--patch` spec).
+
+You don't have to work this out yourself. Describe your layout to the agent, for example:
+
+> "My two tubes face each other across a table. Set them up so effects travel around the table."
+
+It runs a test pattern, asks what you see, and sets `reverse` for each tube to match.
 
 ## Contents
 
