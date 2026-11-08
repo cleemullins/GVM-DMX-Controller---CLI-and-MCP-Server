@@ -1,0 +1,31 @@
+# The DMX rig: two BD45R tubes facing each other across a table. Each [[fixture]] must match
+# the tube's own Set up menu: CONTROL = DMX, DMX ADDR = address, DMX MODE = mode, DMX PIXEL = pixel.
+# Full guide: docs/SETUP.md
+#
+# mode:  CCT&RGB | CCT&HSI | CCT | RGB | HSI | EFFECT | PIXEL FX
+# pixel: LEDs per group -> 33 (whole tube), 11 (3 segments), 3 (11 segments), 1 (33 segments)
+# Channels used = segments x channels per segment (CCT&RGB 7, CCT&HSI 6, RGB 4, CCT/HSI 3,
+# EFFECT 5, PIXEL FX 9), so CCT&RGB with pixel 33 uses 7 channels.
+#
+# The tube's pixel 1 is at the end away from the controls. reverse = true flips that so
+# segment 1 is on the operator's left for every tube.
+
+# driver "d2xx" (FTDI library, recommended): device = adapter serial number, "" = first adapter.
+# driver "serial" (Windows COM port fallback): device = "COM3".
+driver = "d2xx"
+device = ""
+fps = 25
+
+[[fixture]]
+name = "tube1"
+address = 1
+mode = "CCT&RGB"
+pixel = 1
+reverse = true   # faces the operator, controls on the left
+
+[[fixture]]
+name = "tube2"
+address = 232
+mode = "CCT&RGB"
+pixel = 1
+reverse = false  # opposite tube 1, controls on the operator's right

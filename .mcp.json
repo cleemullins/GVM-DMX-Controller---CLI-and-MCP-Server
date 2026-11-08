@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gvm-lights": {
+      "command": "python",
+      "args": ["-m", "gvm", "mcp"]
+    }
+  }
+}
