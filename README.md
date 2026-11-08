@@ -35,9 +35,19 @@ change them:
 | **DMX MODE** | **CCT&RGB** | **CCT&RGB** | Per pixel: intensity, colour temperature, green/magenta, white↔colour crossfade, R, G, B |
 | **DMX PIXEL** | **1** | **1** | Every one of the 33 pixels is controlled separately. All effects run in software, so the menus never need changing again |
 
-Then match the physical orientation in [`gvm.toml`](gvm.toml) with `reverse`. The tube's pixel 1
-is at the end *away* from its controls. Set `reverse = true` for a tube whose controls are on your
-left, so segment 1 is on your left for every tube.
+### Using more than one tube
+
+With more than one tube, effects can play across the whole rig, not just along each tube: a chase
+that runs from one tube into the next, colors that travel down a row of tubes, or a ping-pong ball
+that bounces between two tubes facing each other. For that, the software needs to know which way
+each tube is mounted. Each tube's pixel order can be flipped with `reverse` (in `gvm.toml`, or
+`:reverse` in a `--patch` spec).
+
+You don't have to work this out yourself. Describe your layout to the agent, for example:
+
+> "My two tubes face each other across a table. Set them up so effects travel around the table."
+
+It runs a test pattern, asks what you see, and sets `reverse` for each tube to match.
 
 **The software shows the same settings for the config in use**, so they can't drift apart:
 
@@ -54,7 +64,7 @@ Other layouts (other modes, fewer pixels, more tubes) are in
 | A tube ignores everything but stays lit | CONTROL is still `Master` |
 | Setting one pixel lights the whole tube | DMX PIXEL is 33, not 1 |
 | Tubes copy each other or interfere | DMX ADDR overlaps (tube 2 must be 232) |
-| Effects run backwards on one tube | `reverse` in `gvm.toml` |
+| Effects run the wrong way on one tube | `reverse` for that tube, or ask the agent to fix it |
 | Tubes flicker or ignore DMX entirely | the XLR-to-RJ45 adapter's pinout, or a missing terminator (see [Wiring and pinouts](#wiring-and-pinouts)) |
 
 ## Contents
@@ -204,7 +214,7 @@ gvm [rig options] COMMAND [command options]
 | `mcp` | Run the MCP server over stdio | `gvm mcp` |
 
 **Targeting:** `-f/--fixture NAME` (repeatable; default all tubes) and `-s/--segment N`
-(repeatable; 1–33, segment 1 = the operator's left).
+(repeatable; 1–33).
 
 **Rig options** override the config file. Put them before the command:
 
@@ -340,7 +350,7 @@ npx @modelcontextprotocol/inspector python -m gvm mcp
 | "Make tube 2 warm, 3200 K at 30%, and leave tube 1 alone." | `set_white` with `fixtures` |
 | "Turn tube 1 red and tube 2 blue." | `set_color` twice |
 | "Dim everything to 20%." | `set_intensity` |
-| "Light just the left five pixels of tube 1 in orange." | `set_color` with `segments: [1,2,3,4,5]` |
+| "Light just the first five pixels of tube 1 in orange." | `set_color` with `segments: [1,2,3,4,5]` |
 | "Paint a sunset gradient across both tubes." | `paint` with colour stops |
 | "Run a slow cyan meteor." / "Do the table ping pong for 30 seconds." | `start_effect` |
 | "Stop the effect." / "Lights off." | `stop_effect` / `lights_off` |
@@ -348,7 +358,7 @@ npx @modelcontextprotocol/inspector python -m gvm mcp
 | "I moved tube 2 to address 300." | `configure_rig` |
 
 Colours can be names (`red`, `amber`, `teal`, …), `#rrggbb`, `r,g,b` or `hue:DEG[,SAT]`.
-Intensities are 0–100 %. Segment 1 is the operator's left end of each tube.
+Intensities are 0–100 %. Segments are numbered 1–33 along each tube.
 
 ### 5. How it behaves
 
@@ -399,7 +409,7 @@ whole tube).
 
 ## Configuration
 
-`gvm.toml` (this repo's copy describes the reference rig: two tubes facing each other):
+`gvm.toml` (this repo's copy is set up for two tubes):
 
 ```toml
 driver = "d2xx"        # "d2xx" (FTDI library, recommended) or "serial"
@@ -411,7 +421,7 @@ name = "tube1"
 address = 1            # = the tube's DMX ADDR
 mode = "CCT&RGB"       # = DMX MODE: CCT&RGB | CCT&HSI | CCT | RGB | HSI | EFFECT | PIXEL FX
 pixel = 1              # = DMX PIXEL: 33 (whole tube) | 11 | 3 | 1 (33 pixels)
-reverse = true         # true if the tube's controls are on the operator's left
+reverse = true         # flip pixel order (see "Using more than one tube")
 
 [[fixture]]
 name = "tube2"
@@ -440,7 +450,7 @@ for working out addresses for other layouts.
 | `meteor` | pixel | `color`, `tail` |
 | `cycle` | rig | `stagger` (seconds between tubes) |
 | `chase` | rig | `color`, `block` |
-| `table-pingpong` | rig | `colors` or `color`, `tail`. A ball circles between tubes facing each other |
+| `table-pingpong` | rig | `colors` or `color`, `tail`. A ball bounces from tube to tube |
 
 ```bash
 gvm fx wave --color red --bg green --wavelength 8 --seconds 20

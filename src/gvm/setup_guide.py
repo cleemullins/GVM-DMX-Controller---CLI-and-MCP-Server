@@ -29,8 +29,9 @@ PINOUT = [
     {"signal": "Ground", "xlr_pin": 1, "rj45_pin": "7 (and 8)", "t568b": "white/brown (brown)"},
 ]
 
-ORIENTATION = ("The tube's pixel 1 is at the end away from its controls. Set reverse = true for a tube "
-               "whose controls are on the operator's left, so segment 1 is on the left for every tube.")
+ORIENTATION = ("Multiple tubes: pixel 1 is at the end away from a tube's controls. Set reverse = true on "
+               "tubes that should run the other way so effects flow across the rig (run `gvm fx chase` to "
+               "check, or ask the agent to set it up from a description of the layout).")
 
 
 def guide(fixtures: list[BD45R]) -> dict:

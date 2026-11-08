@@ -139,20 +139,18 @@ the same 512-channel universe at DMX PIXEL 1. Use DMX PIXEL 3 (77 channels each)
 
 Some menu changes only take effect after moving to the next item: re-open the menu to confirm.
 
-## 4. Pixel order and `reverse`
+## 4. Multiple tubes: pixel order and `reverse`
 
-The tube numbers its pixels from the **end away from the control panel** (pixel 1) to the
-**control end** (pixel 33).
+This only matters with more than one tube. The tube numbers its pixels from the **end away from
+the control panel** (pixel 1) to the **control end** (pixel 33). How the tubes are mounted decides
+which way effects travel on each one. Setting `reverse` on some tubes makes effects flow across the
+rig the way you want: in the same direction along a row, from one tube into the next, or around
+tubes facing each other (`table-pingpong`).
 
-To make "left to right" mean the same on every tube, set `reverse` per tube so that
-**segment 1 is on the operator's left**:
-
-- tube facing you with its controls on your **left** → `reverse = true`
-- tube with its controls on your **right** → `reverse = false`
-
-In this rig the tubes face each other across a table. Tube 1 faces the operator with its controls
-on the left (reversed); tube 2 has its controls on the operator's right (not reversed). Check with
-`gvm fx chase --seconds 6`: the block should run from your left to your right on both tubes.
+The easiest way is to let the agent do it. Describe the layout, e.g. *"my tubes face each other
+across a table; make effects travel around it"*. It runs a chase, asks which way it moves on each
+tube, and sets `reverse` to match. By hand: run `gvm fx chase --seconds 6`, then set `reverse = true`
+on any tube where the block runs the wrong way.
 
 ## 5. Install the software
 
@@ -198,7 +196,7 @@ name = "tube1"
 address = 1
 mode = "CCT&RGB"
 pixel = 1
-reverse = true         # controls on the operator's left
+reverse = true         # flip pixel order (§4)
 
 [[fixture]]
 name = "tube2"

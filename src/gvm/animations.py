@@ -171,10 +171,10 @@ def _chase(fixtures: list[BD45R], o: Options, stop: threading.Event) -> None:
 
 
 def _table_pingpong(fixtures: list[BD45R], o: Options, stop: threading.Event) -> None:
-    """A ball runs along tube 1, then back along tube 2, ... so it circles tubes facing each other.
+    """A ball runs along tube 1, then back along tube 2, ... bouncing from tube to tube.
 
-    With `reverse` set so segment 1 is on the operator's left for every tube, the ball
-    goes round the table. Colour steps through `colors` every 3 seconds.
+    With each tube's `reverse` matching how it is mounted, it circles tubes that face each
+    other. Colour steps through `colors` every 3 seconds.
     """
     palette, tail = o.colors or PALETTE, o.tail if o.tail is not None else 4
     if o.color:
@@ -207,7 +207,7 @@ def _table_pingpong(fixtures: list[BD45R], o: Options, stop: threading.Event) ->
 RIG_EFFECTS: dict[str, tuple[Callable[[list[BD45R], Options, threading.Event], None], str]] = {
     "cycle": (_cycle, "whole tubes sweep red -> green -> blue -> red; `stagger` delays each next tube"),
     "chase": (_chase, "a `color` block (block = width) runs from segment 1 to the end on every tube"),
-    "table-pingpong": (_table_pingpong, "a ball circles between tubes facing each other, changing colour"),
+    "table-pingpong": (_table_pingpong, "a ball bounces from tube to tube, changing colour (set `reverse` to match the layout)"),
 }
 
 NAMES = [*PIXEL_EFFECTS, *RIG_EFFECTS]

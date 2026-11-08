@@ -21,8 +21,16 @@ INSTRUCTIONS = f"""\
 Controls GVM BD45R 48" RGB LED tubes over DMX. Call rig_info first to learn the tube names
 and segment counts. Tubes keep their last look until changed. Colours accept a name
 ({", ".join(NAMED)}), #rrggbb, "r,g,b" or "hue:DEG[,SAT]". Intensities are 0-100 %,
-colour temperature {CCT_MIN_K}-{CCT_MAX_K} K. Segment 1 is the operator's left end of a tube.
+colour temperature {CCT_MIN_K}-{CCT_MAX_K} K. Segments are numbered 1-33 along each tube; a
+tube's `reverse` flag flips that order.
 Effects run in the background until stop_effect or another lighting call.
+
+With several tubes, effects can flow across the rig (chase from tube to tube, table-pingpong
+between tubes facing each other) if each tube's `reverse` matches how it is mounted. When the
+user describes their layout or says an effect runs the wrong way: start_effect "chase" for about
+6 seconds, ask which way the block moved on each tube, then configure_rig with ":reverse" added to
+the tubes that should flip, and re-check. Tell the user to set reverse = true for those tubes in
+gvm.toml to make it permanent.
 
 Each tube's own Set up menu must match the patch: CONTROL = DMX, and DMX ADDR / DMX MODE /
 DMX PIXEL as listed under set_on_light in rig_info (standard rig: CCT&RGB, DMX PIXEL 1,
@@ -31,7 +39,7 @@ length, call light_setup_guide and walk the user through the menu, wiring, adapt
 terminator."""
 
 Fixtures = Annotated[list[str] | None, Field(description="tube names or numbers; omit for all tubes")]
-Segments = Annotated[list[int] | None, Field(description="segment numbers (1 = operator's left); omit for whole tube")]
+Segments = Annotated[list[int] | None, Field(description="segment numbers 1-33 along the tube; omit for whole tube")]
 Intensity = Annotated[float, Field(ge=0, le=100, description="brightness in percent")]
 
 

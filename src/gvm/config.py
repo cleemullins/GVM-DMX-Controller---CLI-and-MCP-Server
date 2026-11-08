@@ -25,8 +25,8 @@ TEMPLATE = """\
 # Channels used = segments x channels per segment (CCT&RGB 7, CCT&HSI 6, RGB 4, CCT/HSI 3,
 # EFFECT 5, PIXEL FX 9), so CCT&RGB with pixel 1 uses 231 channels.
 #
-# The tube's own pixel 1 is at the end away from its controls. reverse = true flips that so
-# segment 1 is on the operator's left for every tube.
+# Multiple tubes: the tube's own pixel 1 is at the end away from its controls. reverse = true
+# flips a tube's pixel order so effects flow across the rig the way it is mounted.
 
 # driver "d2xx" (FTDI library, recommended): device = adapter serial number, "" = first adapter.
 # driver "serial" (Windows COM port fallback): device = "COM3".
